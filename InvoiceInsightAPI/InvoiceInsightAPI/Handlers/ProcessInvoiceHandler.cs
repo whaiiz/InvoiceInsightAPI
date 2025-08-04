@@ -57,17 +57,17 @@ namespace InvoiceInsightAPI.Handlers
                 geminiResponse.EnsureSuccessStatusCode();
                 var responseBody = await geminiResponse.Content.ReadAsStringAsync();
                 var geminiResponseObj = JsonSerializer.Deserialize<GeminiResponse>(responseBody);
-                var text = geminiResponseObj.Candidates.FirstOrDefault().Content.Parts.FirstOrDefault().Text;
-                string cleanedJson = Regex.Replace(text, @"^```json|```$", "", RegexOptions.Multiline).Trim();
-
-                // Desserializa
+                var text = geminiResponseObj?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+                
+                if (string.IsNullOrEmpty(text)) throw new JsonException("Text is empty!");
+                
+                var cleanedJson = Regex.Replace(text, @"^```json|```$", "", RegexOptions.Multiline).Trim();
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
                 var invoiceData = JsonSerializer.Deserialize<InvoiceData>(cleanedJson, options);
 
-                
                 return new ApiResponse<ProcessInvoiceResponse>()
                 {
                     HttpStatusCode = HttpStatusCode.OK,
